@@ -29,4 +29,13 @@ e.g
 python3 central_system.py ~/checkout/everest-workspace/everest-core/build/dist/etc/everest/certs/
 ```
 
-You can now start EVerest with an OCPP configuration that points to this CSMS. The CSMS is able to handle OCPP1.6 and OCPP2.0.1 based on the specified websocket subprotol of the client.
+## Docker
+
+Alternatively, a Docker image can be used to run the CSMS server.
+
+```
+docker build -t everest-ocpp-csms .
+docker run -d --name everest-ocpp-csms -v $(pwd)/certs:/certs -p 9000:9000 everest-ocpp-csms
+```
+
+You can now start EVerest with an OCPP configuration that points to this CSMS. The CSMS is able to handle OCPP1.6 and OCPP2.0.1 based on the specified websocket subprotocol of the client.
