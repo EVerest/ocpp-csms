@@ -11,6 +11,8 @@ import argparse
 
 __version__ = "0.1.0"
 
+iso15118_certs = None
+
 async def on_connect(websocket, path):
     try:
         requested_protocols = websocket.request_headers["Sec-WebSocket-Protocol"]
@@ -32,11 +34,11 @@ async def on_connect(websocket, path):
     if (websocket.subprotocol == "ocpp1.6"):
         charge_point_id = path.strip("/")
         logging.info(f"{charge_point_id} connected using OCPP1.6")
-        cp = ChargePoint16(charge_point_id, websocket)
+        cp = ChargePoint16(charge_point_id, websocket, iso15118_certs=iso15118_certs)
         await cp.start()
     else:
         charge_point_id = path.strip("/")
-        cp = ChargePoint201(charge_point_id, websocket)
+        cp = ChargePoint201(charge_point_id, websocket, iso15118_certs=iso15118_certs)
         logging.info(f"{charge_point_id} connected using OCPP2.0.1")
         await cp.start()
 
@@ -62,6 +64,12 @@ async def main():
     parser.add_argument('--cert-chain', type=str, default=None,
                         help='Certificate chain to be used with TLS websockets. If not provided TLS will be disabled')
 
+    parser.add_argument('--certs', type=str, default="../everest-core/build/dist/etc/everest/certs",
+                        help='Directory containing certificates (default: ../everest-core/build/dist/etc/everest/certs)')
+
+    parser.add_argument('certificates', type=str, default=None, nargs='?',
+                        help='Directory containing certificates (default: identical to --certs')
+
     args = parser.parse_args()
 
     host = args.host
@@ -73,6 +81,15 @@ async def main():
     tls_port = args.tls_port
 
     cert_chain = args.cert_chain
+
+    certs = Path(args.certs)
+    if not certs.exists():
+        logging.warning(
+            'Directory containing certificates does not exist, ISO15118 features are not available')
+    else:
+        global iso15118_certs
+        iso15118_certs = certs
+
     server = await websockets.serve(
         on_connect, host, port, subprotocols=["ocpp1.6", "ocpp2.0.1"]
     )

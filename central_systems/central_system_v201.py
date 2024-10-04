@@ -23,9 +23,17 @@ from ocpp.v201.enums import (
 
 logging.basicConfig(level=logging.INFO)
 
-exi_generator = EXIGenerator(certs_path=sys.argv[1])
 
 class ChargePoint201(cp):
+    def __init__(self, *args, iso15118_certs, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.iso15118_certs = iso15118_certs
+        if iso15118_certs:
+            self.exi_generator = EXIGenerator(
+                certs_path=self.iso15118_certs.as_posix())
+        else:
+            self.exi_generator = None
+
     @on(Action.BootNotification)
     def on_boot_notification(self, **kwargs):
         logging.debug("Received a BootNotification")
@@ -114,15 +122,17 @@ class ChargePoint201(cp):
 
     @on(Action.Get15118EVCertificate)
     def on_get_15118_ev_certificate(self, **kwargs):
+        if not self.exi_generator:
+            return call.create_call_error(f'iso15118 certificate path "{self.iso15118_certs.as_posix()}" not found')
         exi_request = kwargs["exi_request"]
         namespace = kwargs['iso15118_schema_version']
         return call_result.Get15118EVCertificatePayload(
-                    status=Iso15118EVCertificateStatusType.accepted,
-                    exi_response=exi_generator.generate_certificate_installation_res(
-                        exi_request,
-                        namespace
-                    )
-                )
+            status=Iso15118EVCertificateStatusType.accepted,
+            exi_response=self.exi_generator.generate_certificate_installation_res(
+                exi_request,
+                namespace
+            )
+        )
 
     @on(Action.GetCertificateStatus)
     def on_get_certificate_status(self, **kwargs):
@@ -319,4 +329,3 @@ class ChargePoint201(cp):
     async def update_firmware(self, **kwargs):
         payload = call.UpdateFirmwarePayload(**kwargs)
         return await self.call(payload)
-

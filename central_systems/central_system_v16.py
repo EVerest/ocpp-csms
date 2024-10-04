@@ -34,6 +34,15 @@ logging.basicConfig(level=logging.INFO)
 
 
 class ChargePoint16(cp):
+    def __init__(self, *args, iso15118_certs, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.iso15118_certs = iso15118_certs
+        if iso15118_certs:
+            self.exi_generator = EXIGenerator(
+                certs_path=self.iso15118_certs.as_posix())
+        else:
+            self.exi_generator = None
+
     @on(Action.BootNotification)
     def on_boot_notification(
         self, charge_point_vendor: str, charge_point_model: str, **kwargs
@@ -123,7 +132,8 @@ class ChargePoint16(cp):
                     data="Please implement me"
                 )
             elif req.message_id == "Get15118EVCertificate":
-                exi_generator = EXIGenerator(certs_path=sys.argv[1])
+                if not self.exi_generator:
+                    return call.create_call_error(f'iso15118 certificate path "{self.iso15118_certs.as_posix()}" not found')
                 exi_request = json.loads(req.data)["exiRequest"]
                 namespace = json.loads(kwargs['data'])['iso15118SchemaVersion']
                 return call_result.DataTransferPayload(
@@ -131,7 +141,7 @@ class ChargePoint16(cp):
                     data=json.dumps(remove_nones(snake_to_camel_case(asdict(
                         call_result201.Get15118EVCertificatePayload(
                             status=Iso15118EVCertificateStatusType.accepted,
-                            exi_response=exi_generator.generate_certificate_installation_res(
+                            exi_response=self.exi_generator.generate_certificate_installation_res(
                                 exi_request,
                                 namespace
                             )
