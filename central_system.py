@@ -2,8 +2,12 @@
 # Copyright 2020 - 2024 Pionix GmbH and Contributors to EVerest
 import asyncio
 import logging
+
+import websockets.asyncio
+import websockets.asyncio.server
 from central_systems.central_system_v16 import ChargePoint16
 from central_systems.central_system_v201 import ChargePoint201
+import http
 import websockets
 import ssl
 from pathlib import Path
@@ -12,6 +16,21 @@ import argparse
 __version__ = "0.1.0"
 
 iso15118_certs = None
+reject_auth = False
+
+
+async def process_request(connection, request):
+    logging.info(f'request:\n{request}')
+    if reject_auth:
+        logging.info(
+            'Rejecting authorization because of the --reject-auth command line parameter')
+        return (
+            http.HTTPStatus.UNAUTHORIZED,
+            [],
+            b'Invalid credentials\n',
+        )
+    return None
+
 
 async def on_connect(websocket, path):
     try:
@@ -34,11 +53,13 @@ async def on_connect(websocket, path):
     if (websocket.subprotocol == "ocpp1.6"):
         charge_point_id = path.strip("/")
         logging.info(f"{charge_point_id} connected using OCPP1.6")
-        cp = ChargePoint16(charge_point_id, websocket, iso15118_certs=iso15118_certs)
+        cp = ChargePoint16(charge_point_id, websocket,
+                           iso15118_certs=iso15118_certs)
         await cp.start()
     else:
         charge_point_id = path.strip("/")
-        cp = ChargePoint201(charge_point_id, websocket, iso15118_certs=iso15118_certs)
+        cp = ChargePoint201(charge_point_id, websocket,
+                            iso15118_certs=iso15118_certs)
         logging.info(f"{charge_point_id} connected using OCPP2.0.1")
         await cp.start()
 
@@ -70,6 +91,9 @@ async def main():
     parser.add_argument('certificates', type=str, default=None, nargs='?',
                         help='Directory containing certificates (default: identical to --certs')
 
+    parser.add_argument('--reject-auth', action='store_true', default=False,
+                        help='Reply with 403 error in connection')
+
     args = parser.parse_args()
 
     host = args.host
@@ -90,8 +114,11 @@ async def main():
         global iso15118_certs
         iso15118_certs = certs
 
+    global reject_auth
+    reject_auth = args.reject_auth
+
     server = await websockets.serve(
-        on_connect, host, port, subprotocols=["ocpp1.6", "ocpp2.0.1"]
+        on_connect, host, port, subprotocols=["ocpp1.6", "ocpp2.0.1"], process_request=process_request
     )
 
     tls_server = None
@@ -102,7 +129,7 @@ async def main():
         ssl_context.load_cert_chain(cert_chain)
 
         tls_server = await websockets.serve(
-            on_connect, tls_host, tls_port, subprotocols=["ocpp1.6", "ocpp2.0.1"], ssl=ssl_context
+            on_connect, tls_host, tls_port, subprotocols=["ocpp1.6", "ocpp2.0.1"], process_request=process_request, ssl=ssl_context
         )
 
     logging.info("OCPP CSMS Started listening to new connections...")
@@ -112,4 +139,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        exit(0)
