@@ -30,3 +30,11 @@ python3 central_system.py ~/checkout/everest-workspace/everest-core/build/dist/e
 ```
 
 You can now start EVerest with an OCPP configuration that points to this CSMS. The CSMS is able to handle OCPP1.6 and OCPP2.0.1 based on the specified websocket subprotol of the client.
+
+Use 
+
+```bash
+python3 central_system.py --help 
+```
+
+to get an overview of additional options.
