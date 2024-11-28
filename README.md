@@ -5,10 +5,10 @@ The CSMS will respond "friendly" to most OCPP messages initiated by the Chargepo
 
 # Usage
 
-In this project [Josev](https://github.com/EVerest/ext-switchev-iso15118) is needed as git submodule to generate the CertificateInstallationResponse. To clone Josev as well, execute these commands after cloning this repo:
+In this project, [Josev](https://github.com/EVerest/ext-switchev-iso15118) is needed as git submodule to generate the CertificateInstallationResponse. To clone both this repo and the Josev submodule, execute this command:
 
 ```bash
-git clone --recurse-submodules git@github.com:EVerest/ocpp-csms.git
+git clone --recurse-submodules https://github.com/EVerest/ocpp-csms.git
 ```
 
 Install the necessary python packages using
