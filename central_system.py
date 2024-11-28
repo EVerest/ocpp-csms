@@ -3,8 +3,6 @@
 import asyncio
 import logging
 
-import websockets.asyncio
-import websockets.asyncio.server
 from central_systems.central_system_v16 import ChargePoint16
 from central_systems.central_system_v201 import ChargePoint201
 import http
