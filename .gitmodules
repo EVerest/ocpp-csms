@@ -1,4 +1,4 @@
 [submodule "Josev"]
 	path = Josev
-	url = git@github.com:EVerest/ext-switchev-iso15118.git
+	url = https://github.com/EVerest/ext-switchev-iso15118.git
 	branch = everest
