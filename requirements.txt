@@ -1,4 +1,4 @@
 ocpp
 cryptography
 pydantic==1.*
-websockets
+websockets>=10, < 14
