@@ -17,21 +17,21 @@ Install the necessary python packages using
 python3 -m pip install -r requirements.txt
 ```
 
-Use the following command to start the CSMS server on localhost:9000 and provide the directory of the certificates and keys. For now, a fixed structure for the certificates and keys is required. 
+Use the following command to start the CSMS server on localhost:9000 and provide the directory of the certificates and keys. For now, a fixed structure for the certificates and keys is required.
 
 ```bash
-python3 central_system.py <path-to-everest-certs>
+python3 central_system.py --certs <path-to-everest-certs>
 ```
 
 e.g
 
 ```bash
-python3 central_system.py ~/checkout/everest-workspace/everest-core/build/dist/etc/everest/certs/
+python3 central_system.py --certs ~/checkout/everest-workspace/everest-core/build/dist/etc/everest/certs/
 ```
 
 You can now start EVerest with an OCPP configuration that points to this CSMS. The CSMS is able to handle OCPP1.6 and OCPP2.0.1 based on the specified websocket subprotol of the client.
 
-Use 
+Use
 
 ```bash
 python3 central_system.py --help 

@@ -1,4 +1,12 @@
-ocpp
+ocpp==2.0.0
 cryptography
 pydantic==1.*
 websockets>=10, < 14
+environs>=9.5.0
+pydantic==1.*
+psutil>=5.9.1
+cryptography>=3.4.6
+aiofile>=3.7.4
+py4j>=0.10.9.5
+netifaces>=0.11.0
+python-dateutil>=2.8.2
