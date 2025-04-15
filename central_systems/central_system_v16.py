@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2020 - 2024 Pionix GmbH and Contributors to EVerest
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import sys
 
@@ -48,14 +48,14 @@ class ChargePoint16(cp):
         self, charge_point_vendor: str, charge_point_model: str, **kwargs
     ):
         return call_result.BootNotification(
-            current_time=datetime.utcnow().isoformat(),
+            current_time=datetime.now(timezone.utc).isoformat(),
             interval=10,
             status=RegistrationStatus.accepted,
         )
 
     @on(Action.heartbeat)
     def on_heartbeat(self, **kwargs):
-        return call_result.Heartbeat(current_time=datetime.utcnow().isoformat())
+        return call_result.Heartbeat(current_time=datetime.now(timezone.utc).isoformat())
 
     @on(Action.authorize)
     def on_authorize(self, **kwargs):
