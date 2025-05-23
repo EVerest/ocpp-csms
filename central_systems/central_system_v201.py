@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2020 - 2024 Pionix GmbH and Contributors to EVerest
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 
 from exi_generator import EXIGenerator
@@ -37,7 +37,7 @@ class ChargePoint201(cp):
     @on(Action.boot_notification)
     def on_boot_notification(self, **kwargs):
         logging.debug("Received a BootNotification")
-        return call_result.BootNotification(current_time=datetime.now().isoformat(),
+        return call_result.BootNotification(current_time=datetime.now(timezone.utc).isoformat(),
                                                    interval=300, status=RegistrationStatusEnumType.accepted)
 
     @on(Action.status_notification)
@@ -46,7 +46,7 @@ class ChargePoint201(cp):
 
     @on(Action.heartbeat)
     def on_heartbeat(self, **kwargs):
-        return call_result.Heartbeat(current_time=datetime.utcnow().isoformat())
+        return call_result.Heartbeat(current_time=datetime.now(timezone.utc).isoformat())
 
     @on(Action.authorize)
     def on_authorize(self, **kwargs):
