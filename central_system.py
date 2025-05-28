@@ -5,6 +5,7 @@ import logging
 
 from central_systems.central_system_v16 import ChargePoint16
 from central_systems.central_system_v201 import ChargePoint201
+from central_systems.central_system_v21 import ChargePoint21
 import http
 import websockets
 import ssl
@@ -54,17 +55,23 @@ async def on_connect(websocket, path):
         cp = ChargePoint16(charge_point_id, websocket,
                            iso15118_certs=iso15118_certs)
         await cp.start()
-    else:
+    elif (websocket.subprotocol == "ocpp2.0.1"):
         charge_point_id = path.strip("/")
         cp = ChargePoint201(charge_point_id, websocket,
                             iso15118_certs=iso15118_certs)
         logging.info(f"{charge_point_id} connected using OCPP2.0.1")
         await cp.start()
+    else:
+        charge_point_id = path.strip("/")
+        cp = ChargePoint21(charge_point_id, websocket,
+                           iso15118_certs=iso15118_certs)
+        logging.info(f"{charge_point_id} connected using OCPP2.1")
+        await cp.start()
 
 
 async def main():
     parser = argparse.ArgumentParser(
-        description='A simple OCPP 1.6 and 2.0.1 CSMS')
+        description='A simple OCPP 1.6, 2.0.1, 2.1 CSMS')
     parser.add_argument('--version', action='version',
                         version=f'%(prog)s {__version__}')
 
@@ -116,7 +123,7 @@ async def main():
     reject_auth = args.reject_auth
 
     server = await websockets.serve(
-        on_connect, host, port, subprotocols=["ocpp1.6", "ocpp2.0.1"], process_request=process_request
+        on_connect, host, port, subprotocols=["ocpp1.6", "ocpp2.0.1", "ocpp2.1"], process_request=process_request
     )
 
     tls_server = None
